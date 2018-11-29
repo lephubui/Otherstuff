@@ -16,38 +16,3 @@ else
    DEBUG=0
    #echo "EAV `basename $0`: \$DEBUG: $DEBUG" | logger -p local0.debug
 fi
- 
-# Remove IPv6/IPv4 compatibility prefix (LTM passes addresses in IPv6 format)
-IP=`echo $1 | sed 's/::ffff://'`
- 
-# Save the port for use in the shell command
-PORT=$2
- 
-# Check if there is a prior instance of the monitor running
-pidfile="/var/run/`basename $0`.$IP.$PORT.pid"
-if [ -f $pidfile ]
-then
-   kill -9 `cat $pidfile` > /dev/null 2>&1
-   echo "EAV `basename $0`: exceeded monitor interval, needed to kill ${IP}:${PORT} with PID `cat $pidfile`" | logger -p local0.error
-fi
- 
-# Add the current PID to the pidfile
-echo "$$" > $pidfile
- 
-# Debug
-if [ $DEBUG -eq 1 ]
-then
-   ####  Customize the log statement here if you want to log the command run or the output ####
-   echo "EAV `basename $0`: Running for ${IP}:${PORT} using custom command" | logger -p local0.debug
-fi
- 
-####  Customize the shell command to run here. ###
-# Use $IP and $PORT to specify which host/port to perform the check against
-# Modify this portion of the line:
-# nc $IP $PORT | grep "my receive string" 
-# And leave this portion as is:
-# '2>&1 > /dev/null'
-# The above code redirects stderr and stdout to nothing to ensure we don't errantly mark the pool member up
- 
-# Send the request request and check the response
-nc $IP $PORT | grep "my receive string" 2>&1 > /dev/null
